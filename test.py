@@ -39,9 +39,9 @@ def create_table():
     if conn:
         cursor = conn.cursor()
         try:
-            cursor.execute("DROP TABLE tb_cycle_station_info CASCADE;")
-            conn.commit
-            print("deletesuccess")
+            #cursor.execute("DROP TABLE IF EXISTS tb_cycle_station_info CASCADE;")
+            #conn.commit
+            #print("delete success")
             cursor.execute(create_query)
             conn.commit()
             print("Table created successfully!")
@@ -51,9 +51,9 @@ def create_table():
             cursor.close()
             conn.close()
 
-# API에서 데이터 가져오기
-def fetch_data_from_api():
-    api_url = "http://openapi.seoul.go.kr:8088/5457776d5073657938315043486944/json/tbCycleStationInfo/1/1000/"
+# API에서 데이터를 분할하여 가져오기
+def fetch_data_from_api(start, end):
+    api_url = f"http://openapi.seoul.go.kr:8088/5457776d5073657938315043486944/json/tbCycleStationInfo/{start}/{end}/"
     response = requests.get(api_url)
     
     if response.status_code == 200:
@@ -62,6 +62,16 @@ def fetch_data_from_api():
     else:
         print(f"API Response Error: {response.status_code}")
         return []
+
+# API 데이터를 반복적으로 호출하여 전체 데이터 가져오기
+def fetch_all_data_from_api(total_count, batch_size=1000):
+    all_data = []
+    for start in range(1, total_count + 1, batch_size):
+        end = min(start + batch_size - 1, total_count)  # 마지막 범위 조정
+        print(f"Fetching data from {start} to {end}...")
+        data = fetch_data_from_api(start, end)
+        all_data.extend(data)
+    return all_data
 
 # 데이터 삽입
 def insert_data_in_batches(cursor, data, batch_size=500):
@@ -82,8 +92,12 @@ def insert_data_in_batches(cursor, data, batch_size=500):
 # API에서 데이터 받아서 DB에 삽입
 def fetch_and_store_data():
     try:
-        # API에서 데이터 가져오기
-        station_info = fetch_data_from_api()
+        # 전체 데이터 개수 설정 (예: 3143개)
+        total_count = 3143
+        batch_size = 500  # 한 번에 가져올 데이터 크기
+
+        # API에서 모든 데이터 가져오기
+        station_info = fetch_all_data_from_api(total_count, batch_size)
         
         if not station_info:
             print("No data to insert.")
