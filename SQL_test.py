@@ -33,6 +33,7 @@ def main():
             """)
             conn.commit()
             rows = cursor.fetchall()
+            print("광진구에 있는 station의 개수")
             print(f"{"no":<20}  {"count(*)":<20} ")
             for i, row in enumerate(rows, start=1):
                 print(f"{i:<20}  {row[0]:<20} ")
