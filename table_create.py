@@ -51,6 +51,25 @@ def main():
     FROM tb_cycle_station_info A;
     """
 
+    insert_station_table_query = """
+        INSERT INTO Station (stationID, stationName, rackTotCnt)
+        SELECT RENT_ID, RENT_NM, HOLD_NUM
+        FROM tb_cycle_station_info
+    """
+
+    insert_bikestatus_table_query = """
+        INSERT INTO bikestatus (stationID, parkingBikeTotCnt, shared)
+        SELECT stationId, parkingBikeTotCnt, shared
+        FROM bikeList
+    """
+
+    insert_stationlocation_table_query = """
+        INSERT INTO stationlocation (stationID, STA_LOC, STA_ADD1, STA_ADD2, STA_LAT, STA_LONG)
+        SELECT RENT_ID, STA_LOC, STA_ADD1, STA_ADD2, STA_LAT, STA_LONG
+        FROM tb_cycle_station_info
+    """
+
+
     # PostgreSQL 연결
     conn = connect_db()
     if conn:
@@ -60,10 +79,18 @@ def main():
             cursor.execute(create_station_table_query)
             cursor.execute(create_bikestatus_table_query)
             cursor.execute(create_stationlocation_table_query)
+
             
             # 커밋
             conn.commit()
             print("Tables created successfully!")
+
+            #insert
+            cursor.execute(insert_station_table_query)
+            cursor.execute(insert_bikestatus_table_query)
+            cursor.execute(insert_stationlocation_table_query)
+
+            conn.commit()
         except Exception as e:
             print(f"Table creation failed: {e}")
         finally:
